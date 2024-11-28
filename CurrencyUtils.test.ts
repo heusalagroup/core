@@ -1,8 +1,9 @@
 // Copyright (c) 2023. Heusala Group Oy <info@hg.fi>. All rights reserved.
 
-import { CurrencyUtils } from "./CurrencyUtils";
-import { createCurrencyRates, CurrencyRates } from "./types/CurrencyRates";
-import { Currency } from "./types/Currency";
+import {CurrencyUtils} from "./CurrencyUtils";
+import {createCurrencyRates, CurrencyRates} from "./types/CurrencyRates";
+import {Currency} from "./types/Currency";
+
 
 describe('CurrencyUtils', () => {
 

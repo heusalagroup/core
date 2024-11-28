@@ -2,48 +2,62 @@
 // Copyright (c) 2020-2021. Sendanor <info@sendanor.fi>. All rights reserved.
 // Copyright (c) 2020-2021. Sendanor <info@sendanor.fi>. All rights reserved.
 
-import { getRequestControllerMappingObject, isRequestController, RequestController } from "../request/types/RequestController";
-import { parseRequestMethod, RequestMethod } from "../request/types/RequestMethod";
-import { filter } from "../functions/filter";
-import { forEach } from "../functions/forEach";
-import { has } from "../functions/has";
-import { isNull } from "../types/Null";
-import { map } from "../functions/map";
-import { trim } from "../functions/trim";
-import { reduce } from "../functions/reduce";
-import { concat } from "../functions/concat";
-import { find } from "../functions/find";
-import { keys } from "../functions/keys";
-import { some } from "../functions/some";
-import { RequestControllerMappingObject } from "../request/types/RequestControllerMappingObject";
-import { RequestMappingObject } from "../request/types/RequestMappingObject";
-import { isRequestStatus } from "../request/types/RequestStatus";
-import { RequestParamValueType } from "../request/types/RequestParamValueType";
-import { LogService } from "../LogService";
-import { RequestRouterMappingPropertyObject } from "./types/RequestRouterMappingPropertyObject";
-import { RequestRouterMappingObject } from "./types/RequestRouterMappingObject";
-import { RequestParamObject } from "../request/types/RequestParamObject";
-import { RequestControllerMethodObject } from "../request/types/RequestControllerMethodObject";
-import { RequestQueryParamObject } from "../request/types/RequestQueryParamObject";
-import { isReadonlyJsonAny, isReadonlyJsonArray, isReadonlyJsonObject, JsonAny, JsonObject, ReadonlyJsonObject } from "../Json";
-import { isResponseEntity, ResponseEntity } from "../request/types/ResponseEntity";
-import { isRequestError, RequestError } from "../request/types/RequestError";
-import { RequestParamObjectType } from "../request/types/RequestParamObjectType";
-import { RequestHeaderParamObject } from "../request/types/RequestHeaderParamObject";
-import { Headers } from "../request/types/Headers";
-import { DefaultHeaderMapValuesType } from "../request/types/DefaultHeaderMapValuesType";
-import { RequestHeaderMapParamObject } from "../request/types/RequestHeaderMapParamObject";
-import { RouteUtils } from "./utils/RouteUtils";
-import { BaseRoutes, RouteParamValuesObject } from "./types/BaseRoutes";
-import { RequestPathVariableParamObject } from "../request/types/RequestPathVariableParamObject";
-import { isRequestModelAttributeParamObject, RequestModelAttributeParamObject } from "../request/types/RequestModelAttributeParamObject";
-import { LogLevel } from "../types/LogLevel";
-import { RequestRouter } from "./RequestRouter";
-import { ParseRequestBodyCallback } from "./types/ParseRequestBodyCallback";
-import { RequestQueryParameters } from "../request/utils/RequestQueryParameters";
-import { parseRequestContextFromPath, RequestContext } from "./types/RequestContext";
-import { AsyncSynchronizer } from "../AsyncSynchronizer";
-import { AsyncSynchronizerImpl } from "../AsyncSynchronizerImpl";
+import {
+    getRequestControllerMappingObject,
+    isRequestController,
+    RequestController
+} from "../request/types/RequestController";
+import {parseRequestMethod, RequestMethod} from "../request/types/RequestMethod";
+import {filter} from "../functions/filter";
+import {forEach} from "../functions/forEach";
+import {has} from "../functions/has";
+import {isNull} from "../types/Null";
+import {map} from "../functions/map";
+import {trim} from "../functions/trim";
+import {reduce} from "../functions/reduce";
+import {concat} from "../functions/concat";
+import {find} from "../functions/find";
+import {keys} from "../functions/keys";
+import {some} from "../functions/some";
+import {RequestControllerMappingObject} from "../request/types/RequestControllerMappingObject";
+import {RequestMappingObject} from "../request/types/RequestMappingObject";
+import {isRequestStatus} from "../request/types/RequestStatus";
+import {RequestParamValueType} from "../request/types/RequestParamValueType";
+import {LogService} from "../LogService";
+import {RequestRouterMappingPropertyObject} from "./types/RequestRouterMappingPropertyObject";
+import {RequestRouterMappingObject} from "./types/RequestRouterMappingObject";
+import {RequestParamObject} from "../request/types/RequestParamObject";
+import {RequestControllerMethodObject} from "../request/types/RequestControllerMethodObject";
+import {RequestQueryParamObject} from "../request/types/RequestQueryParamObject";
+import {
+    isReadonlyJsonAny,
+    isReadonlyJsonArray,
+    isReadonlyJsonObject,
+    JsonAny,
+    JsonObject,
+    ReadonlyJsonObject
+} from "../Json";
+import {isResponseEntity, ResponseEntity} from "../request/types/ResponseEntity";
+import {isRequestError, RequestError} from "../request/types/RequestError";
+import {RequestParamObjectType} from "../request/types/RequestParamObjectType";
+import {RequestHeaderParamObject} from "../request/types/RequestHeaderParamObject";
+import {Headers} from "../request/types/Headers";
+import {DefaultHeaderMapValuesType} from "../request/types/DefaultHeaderMapValuesType";
+import {RequestHeaderMapParamObject} from "../request/types/RequestHeaderMapParamObject";
+import {RouteUtils} from "./utils/RouteUtils";
+import {BaseRoutes, RouteParamValuesObject} from "./types/BaseRoutes";
+import {RequestPathVariableParamObject} from "../request/types/RequestPathVariableParamObject";
+import {
+    isRequestModelAttributeParamObject,
+    RequestModelAttributeParamObject
+} from "../request/types/RequestModelAttributeParamObject";
+import {LogLevel} from "../types/LogLevel";
+import {RequestRouter} from "./RequestRouter";
+import {ParseRequestBodyCallback} from "./types/ParseRequestBodyCallback";
+import {RequestQueryParameters} from "../request/utils/RequestQueryParameters";
+import {parseRequestContextFromPath, RequestContext} from "./types/RequestContext";
+import {AsyncSynchronizer} from "../AsyncSynchronizer";
+import {AsyncSynchronizerImpl} from "../AsyncSynchronizerImpl";
 
 const LOG = LogService.createLogger('RequestRouterImpl');
 
@@ -59,34 +73,34 @@ type ModelAttributeProperty = [string, string, (RequestParamObject | null)[]];
 
 export class RequestRouterImpl implements RequestRouter {
 
-    public static setLogLevel (level: LogLevel) {
+    public static setLogLevel(level: LogLevel) {
         LOG.setLogLevel(level);
     }
 
-    private readonly _controllers : RequestController[];
-    private _routes               : BaseRoutes | undefined;
-    private _modelAttributeNames  : Map<RequestController, ModelAttributeProperty[]> | undefined;
-    private _requestMappings      : readonly RequestControllerMappingObject[] | undefined;
-    private _initialized          : boolean;
+    private readonly _controllers: RequestController[];
+    private _routes: BaseRoutes | undefined;
+    private _modelAttributeNames: Map<RequestController, ModelAttributeProperty[]> | undefined;
+    private _requestMappings: readonly RequestControllerMappingObject[] | undefined;
+    private _initialized: boolean;
 
     /**
      * The `AsyncSynchronizer`
      * @private
      */
-    private readonly _asyncSynchronizer : Map<string, AsyncSynchronizer>;
+    private readonly _asyncSynchronizer: Map<string, AsyncSynchronizer>;
 
-    protected constructor () {
-        this._controllers             = [];
-        this._asyncSynchronizer        = new Map<string, AsyncSynchronizer>();
-        this._routes                  = undefined;
-        this._requestMappings         = undefined;
-        this._modelAttributeNames     = undefined;
-        this._initialized             = false;
+    protected constructor() {
+        this._controllers = [];
+        this._asyncSynchronizer = new Map<string, AsyncSynchronizer>();
+        this._routes = undefined;
+        this._requestMappings = undefined;
+        this._modelAttributeNames = undefined;
+        this._initialized = false;
     }
 
-    public static create (
+    public static create(
         ...controllers: readonly any[]
-    ) : RequestRouterImpl {
+    ): RequestRouterImpl {
         const router = new RequestRouterImpl();
         forEach(
             controllers,
@@ -100,31 +114,32 @@ export class RequestRouterImpl implements RequestRouter {
         return router;
     }
 
-    public attachController (controller : RequestController) : void {
+    public attachController(controller: RequestController): void {
         this._controllers.push(controller);
         this._routes = undefined;
     }
 
-    public async handleRequest (
-        methodString      : RequestMethod,
-        urlString         : string                   | undefined = undefined,
-        parseRequestBody  : ParseRequestBodyCallback | undefined = undefined,
-        requestHeaders    : Headers
-    ) : Promise<ResponseEntity<any>> {
+    public async handleRequest(
+        methodString: RequestMethod,
+        urlString: string | undefined = undefined,
+        parseRequestBody: ParseRequestBodyCallback | undefined = undefined,
+        requestHeaders: Headers
+    ): Promise<ResponseEntity<any>> {
 
         try {
 
-            const method : RequestMethod = parseRequestMethod(methodString);
+            const method: RequestMethod = parseRequestMethod(methodString);
+
 
             const {
                 pathName,
                 queryParams
-            } : RequestContext = parseRequestContextFromPath(urlString);
+            }: RequestContext = parseRequestContextFromPath(urlString);
             LOG.debug(`handleRequest: method="${method}", pathName="${pathName}", queryParams=`, queryParams);
 
-            const requestPathName : string | undefined = pathName;
+            const requestPathName: string | undefined = pathName;
 
-            const requestQueryParams : RequestQueryParameters = queryParams ?? {};
+            const requestQueryParams: RequestQueryParameters = queryParams ?? {};
             // LOG.debug('requestQueryParams: ', requestQueryParams);
 
             if (requestPathName === undefined) {
@@ -134,7 +149,7 @@ export class RequestRouterImpl implements RequestRouter {
                 });
             }
 
-            if ( !this._initialized ) {
+            if (!this._initialized) {
                 this._initializeRouter();
             }
 
@@ -142,9 +157,9 @@ export class RequestRouterImpl implements RequestRouter {
                 routes,
                 bodyRequired,
                 pathVariables
-            } : RequestContext = this._getRequestRoutesContext(method, requestPathName);
+            }: RequestContext = this._getRequestRoutesContext(method, requestPathName);
 
-            if ( !parseRequestBody && bodyRequired ) {
+            if (!parseRequestBody && bodyRequired) {
                 LOG.error('handleRequest: parseRequestBody was not provided and body is required');
                 return ResponseEntity.internalServerError().body({
                     error: 'Internal Server Error'
@@ -167,7 +182,7 @@ export class RequestRouterImpl implements RequestRouter {
 
             LOG.debug('routes: ', routes);
 
-            let responseEntity : ResponseEntity<any> | undefined = undefined;
+            let responseEntity: ResponseEntity<any> | undefined = undefined;
 
             const requestBody = parseRequestBody && bodyRequired ? await parseRequestBody(requestHeaders) : undefined;
             LOG.debug('handleRequest: requestBody: ', requestBody);
@@ -177,36 +192,36 @@ export class RequestRouterImpl implements RequestRouter {
             // Handle requests using controllers
             await reduce(routes, async (previousPromise, route: RequestRouterMappingPropertyObject) => {
 
-                const routeController : any = route.controller;
-                const routePropertyName : string = route.propertyName;
-                const routePropertyParams : readonly (RequestParamObject | null)[] = route.propertyParams;
+                const routeController: any = route.controller;
+                const routePropertyName: string = route.propertyName;
+                const routePropertyParams: readonly (RequestParamObject | null)[] = route.propertyParams;
 
-                const routeIndex : number = this._controllers.indexOf(routeController);
+                const routeIndex: number = this._controllers.indexOf(routeController);
 
                 await previousPromise;
 
-                if ( this._modelAttributeNames && this._modelAttributeNames.has(routeController) ) {
+                if (this._modelAttributeNames && this._modelAttributeNames.has(routeController)) {
 
                     LOG.debug(`Populating attributes for property "${routePropertyName}"`);
 
-                    const modelAttributeValues : Map<string, any> = RequestRouterImpl._getOrCreateRequestModelAttributesForController(requestModelAttributes, routeController);
+                    const modelAttributeValues: Map<string, any> = RequestRouterImpl._getOrCreateRequestModelAttributesForController(requestModelAttributes, routeController);
 
-                    const routeAttributeNames : string[] = map(
-                        filter(routePropertyParams, (item : any) : item is RequestModelAttributeParamObject => isRequestModelAttributeParamObject(item)),
-                        (item : RequestModelAttributeParamObject) : string => item.attributeName
+                    const routeAttributeNames: string[] = map(
+                        filter(routePropertyParams, (item: any): item is RequestModelAttributeParamObject => isRequestModelAttributeParamObject(item)),
+                        (item: RequestModelAttributeParamObject): string => item.attributeName
                     );
                     LOG.debug('route attributeNames: ', routeAttributeNames);
 
                     const allModelAttributeNamesForRouteController = this._modelAttributeNames.get(routeController);
                     LOG.debug('all attributeNamePairs: ', allModelAttributeNamesForRouteController);
 
-                    const attributeNamePairs : ModelAttributeProperty[] = filter(
+                    const attributeNamePairs: ModelAttributeProperty[] = filter(
                         allModelAttributeNamesForRouteController ?? [],
-                        (item : ModelAttributeProperty) : boolean => routeAttributeNames.includes(item[0])
+                        (item: ModelAttributeProperty): boolean => routeAttributeNames.includes(item[0])
                     );
                     LOG.debug('attributeNamePairs: ', attributeNamePairs);
 
-                    await reduce(attributeNamePairs, async (p : Promise<void>, pair : ModelAttributeProperty) : Promise<void> => {
+                    await reduce(attributeNamePairs, async (p: Promise<void>, pair: ModelAttributeProperty): Promise<void> => {
 
                         const [attributeName, propertyName, propertyParams] = pair;
 
@@ -225,7 +240,7 @@ export class RequestRouterImpl implements RequestRouter {
                             modelAttributeValues
                         );
 
-                        const stepResult : any = await routeController[propertyName](...stepParams);
+                        const stepResult: any = await routeController[propertyName](...stepParams);
 
                         modelAttributeValues.set(attributeName, stepResult);
 
@@ -245,16 +260,16 @@ export class RequestRouterImpl implements RequestRouter {
 
                 if (!has(routeController, routePropertyName)) {
                     LOG.warn(`Warning! No property by name "${routePropertyName}" found in the controller`);
-                    responseEntity = ResponseEntity.notFound<JsonObject>().body({error:"404 - Not Found", code: 404});
+                    responseEntity = ResponseEntity.notFound<JsonObject>().body({error: "404 - Not Found", code: 404});
                     return;
                 }
 
-                let stepResult : any;
+                let stepResult: any;
 
                 // Lock processing if synchronized enabled
-                const isSynchronized : boolean = route.synchronized;
-                let synchronizerKey : string = '';
-                let synchronizer : AsyncSynchronizer | undefined;
+                const isSynchronized: boolean = route.synchronized;
+                let synchronizerKey: string = '';
+                let synchronizer: AsyncSynchronizer | undefined;
 
                 if (isSynchronized) {
 
@@ -268,7 +283,7 @@ export class RequestRouterImpl implements RequestRouter {
                     }
                     LOG.debug(`handleRequest: Initialized request synchronizer [${synchronizerKey}]`);
 
-                    stepResult = await synchronizer.run(async () : Promise<any> => {
+                    stepResult = await synchronizer.run(async (): Promise<any> => {
                         LOG.debug(`handleRequest: Calling route property by name "${routePropertyName}"`);
                         return await routeController[routePropertyName](...stepParams);
                     });
@@ -380,7 +395,7 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private _initializeRequestMappings () {
+    private _initializeRequestMappings() {
 
         LOG.debug('Initializing request mappings.');
 
@@ -390,7 +405,7 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private _initializeRouter () {
+    private _initializeRouter() {
 
         if (!this._initialized) {
 
@@ -406,55 +421,55 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private _initializeRoutes () {
+    private _initializeRoutes() {
 
         LOG.debug('Initializing routes.');
 
-        if ( this._requestMappings?.length ) {
-            this._routes = RouteUtils.createRoutes( RequestRouterImpl._parseMappingObject(this._requestMappings) );
+        if (this._requestMappings?.length) {
+            this._routes = RouteUtils.createRoutes(RequestRouterImpl._parseMappingObject(this._requestMappings));
         } else {
-            this._routes = RouteUtils.createRoutes( {} );
+            this._routes = RouteUtils.createRoutes({});
         }
 
     }
 
-    private _initializeRequiredModelAttributeNames () {
+    private _initializeRequiredModelAttributeNames() {
 
         LOG.debug('Initializing model attributes.');
 
-        let values : [RequestController, ModelAttributeProperty[]][] = [];
+        let values: [RequestController, ModelAttributeProperty[]][] = [];
 
-        if ( this._requestMappings?.length ) {
+        if (this._requestMappings?.length) {
             values = reduce(
                 this._requestMappings,
                 (arr: [RequestController, ModelAttributeProperty[]][], item: RequestControllerMappingObject) => {
 
                     const controller = item.controller;
 
-                    const controllerUniqueAttributeNames : ModelAttributeProperty[] = reduce(
+                    const controllerUniqueAttributeNames: ModelAttributeProperty[] = reduce(
                         keys(item.controllerProperties),
-                        (arr2: ModelAttributeProperty[], propertyKey : string) : ModelAttributeProperty[] => {
+                        (arr2: ModelAttributeProperty[], propertyKey: string): ModelAttributeProperty[] => {
 
                             LOG.debug('_initializeRequiredModelAttributeNames: propertyKey: ', propertyKey);
 
-                            const propertyValue : RequestControllerMethodObject = item.controllerProperties[propertyKey];
+                            const propertyValue: RequestControllerMethodObject = item.controllerProperties[propertyKey];
 
-                            const propertyAttributeNames : readonly string[] = propertyValue.modelAttributes;
+                            const propertyAttributeNames: readonly string[] = propertyValue.modelAttributes;
 
                             LOG.debug('_initializeRequiredModelAttributeNames: propertyAttributeNames: ', propertyAttributeNames);
 
-                            const params : (RequestParamObject|null)[] = [...propertyValue.params];
+                            const params: (RequestParamObject | null)[] = [...propertyValue.params];
 
-                            forEach(propertyAttributeNames, (attributeName : string) => {
+                            forEach(propertyAttributeNames, (attributeName: string) => {
                                 LOG.debug('_initializeRequiredModelAttributeNames: attributeName: ', attributeName);
-                                if ( find(arr2, (i : ModelAttributeProperty) => i[0] === attributeName) === undefined ) {
+                                if (find(arr2, (i: ModelAttributeProperty) => i[0] === attributeName) === undefined) {
                                     arr2.push([attributeName, propertyKey, params]);
                                 }
                             });
 
                             return arr2;
 
-                    }, []);
+                        }, []);
 
                     LOG.debug('controllerUniqueAttributeNames: ', controllerUniqueAttributeNames);
 
@@ -470,12 +485,12 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private _getRequestRoutesContext (
-        method          : RequestMethod,
-        requestPathName : string
-    ) : RequestContext {
+    private _getRequestRoutesContext(
+        method: RequestMethod,
+        requestPathName: string
+    ): RequestContext {
 
-        if ( !this._routes || !this._routes.hasRoute(requestPathName) ) {
+        if (!this._routes || !this._routes.hasRoute(requestPathName)) {
             if (!this._routes) {
                 LOG.debug(`_getRequestRoutesContext: No routes defined`);
             } else {
@@ -494,7 +509,7 @@ export class RequestRouterImpl implements RequestRouter {
 
         routes = filter(
             routes,
-            (item : RequestRouterMappingPropertyObject) : boolean => {
+            (item: RequestRouterMappingPropertyObject): boolean => {
                 return item.methods.indexOf(method) >= 0;
             }
         );
@@ -520,28 +535,28 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private _getRequestMappings () : RequestControllerMappingObject[] {
+    private _getRequestMappings(): RequestControllerMappingObject[] {
         if (this._controllers.length === 0) {
             return [];
         }
         return filter(
             map(
                 this._controllers,
-                (controller : RequestController) => getRequestControllerMappingObject(controller)
+                (controller: RequestController) => getRequestControllerMappingObject(controller)
             ),
-            (item : RequestControllerMappingObject | undefined) : boolean => !!item
+            (item: RequestControllerMappingObject | undefined): boolean => !!item
         ) as RequestControllerMappingObject[];
     }
 
-    private static _parseMappingObject (
-        requestMappings : readonly RequestControllerMappingObject[]
-    ) : RequestRouterMappingObject {
+    private static _parseMappingObject(
+        requestMappings: readonly RequestControllerMappingObject[]
+    ): RequestRouterMappingObject {
 
-        const routeMappingResult : RequestRouterMappingObject = {};
+        const routeMappingResult: RequestRouterMappingObject = {};
 
-        function setRouteMappingResult (
-            path    : string,
-            mapping : RequestRouterMappingPropertyObject
+        function setRouteMappingResult(
+            path: string,
+            mapping: RequestRouterMappingPropertyObject
         ) {
 
             if (!has(routeMappingResult, path)) {
@@ -553,17 +568,17 @@ export class RequestRouterImpl implements RequestRouter {
 
         }
 
-        forEach(requestMappings, (rootItem : RequestControllerMappingObject) => {
+        forEach(requestMappings, (rootItem: RequestControllerMappingObject) => {
 
-            const controller              = rootItem.controller;
-            const controllerProperties    = rootItem.controllerProperties;
+            const controller = rootItem.controller;
+            const controllerProperties = rootItem.controllerProperties;
             const controllerPropertyNames = keys(controllerProperties);
 
             if (rootItem.mappings.length > 0) {
 
                 // Controller has root mappings
 
-                forEach(rootItem.mappings, (rootMappingItem : RequestMappingObject) => {
+                forEach(rootItem.mappings, (rootMappingItem: RequestMappingObject) => {
 
                     const rootMethods = rootMappingItem.methods;
 
@@ -571,35 +586,35 @@ export class RequestRouterImpl implements RequestRouter {
 
                         forEach(controllerPropertyNames, (propertyKey: string) => {
 
-                            const propertyValue  : RequestControllerMethodObject  = controllerProperties[propertyKey];
-                            const propertyParams : readonly (RequestParamObject|null)[] = propertyValue.params;
+                            const propertyValue: RequestControllerMethodObject = controllerProperties[propertyKey];
+                            const propertyParams: readonly (RequestParamObject | null)[] = propertyValue.params;
 
-                            forEach(propertyValue.mappings, (propertyMappingItem : RequestMappingObject) => {
+                            forEach(propertyValue.mappings, (propertyMappingItem: RequestMappingObject) => {
 
                                 // Filters away any property routes which do not have common methods
-                                const propertyMethods : readonly RequestMethod[] = propertyMappingItem.methods;
+                                const propertyMethods: readonly RequestMethod[] = propertyMappingItem.methods;
 
                                 if (!RequestRouterImpl._matchMethods(rootMethods, propertyMethods)) {
                                     return;
                                 }
 
-                                const propertyMethodsCommonWithRoot : readonly RequestMethod[] = RequestRouterImpl._parseCommonMethods(rootMethods, propertyMethods);
+                                const propertyMethodsCommonWithRoot: readonly RequestMethod[] = RequestRouterImpl._parseCommonMethods(rootMethods, propertyMethods);
 
-                                const propertyPaths : readonly string[] = propertyMappingItem.paths;
+                                const propertyPaths: readonly string[] = propertyMappingItem.paths;
 
-                                forEach(propertyPaths, (propertyPath : string) => {
+                                forEach(propertyPaths, (propertyPath: string) => {
 
                                     const fullPropertyPath = RequestRouterImpl._joinRoutePaths(rootPath, propertyPath);
 
                                     setRouteMappingResult(
                                         fullPropertyPath,
                                         {
-                                            requestBodyRequired : propertyValue?.requestBodyRequired ?? false,
-                                            synchronized        : propertyValue?.synchronized ?? false,
-                                            methods             : propertyMethodsCommonWithRoot,
-                                            controller          : controller,
-                                            propertyName        : propertyKey,
-                                            propertyParams      : propertyParams
+                                            requestBodyRequired: propertyValue?.requestBodyRequired ?? false,
+                                            synchronized: propertyValue?.synchronized ?? false,
+                                            methods: propertyMethodsCommonWithRoot,
+                                            controller: controller,
+                                            propertyName: propertyKey,
+                                            propertyParams: propertyParams
                                         }
                                     );
 
@@ -619,25 +634,25 @@ export class RequestRouterImpl implements RequestRouter {
 
                 forEach(controllerPropertyNames, (propertyKey: string) => {
 
-                    const propertyValue  : RequestControllerMethodObject  = controllerProperties[propertyKey];
-                    const propertyParams : readonly (RequestParamObject|null)[] = propertyValue.params;
+                    const propertyValue: RequestControllerMethodObject = controllerProperties[propertyKey];
+                    const propertyParams: readonly (RequestParamObject | null)[] = propertyValue.params;
 
-                    forEach(propertyValue.mappings, (propertyMappingItem : RequestMappingObject) => {
+                    forEach(propertyValue.mappings, (propertyMappingItem: RequestMappingObject) => {
 
-                        const propertyMethods : readonly RequestMethod[] = propertyMappingItem.methods;
-                        const propertyPaths   : readonly string[]        = propertyMappingItem.paths;
+                        const propertyMethods: readonly RequestMethod[] = propertyMappingItem.methods;
+                        const propertyPaths: readonly string[] = propertyMappingItem.paths;
 
-                        forEach(propertyPaths, (propertyPath : string) => {
+                        forEach(propertyPaths, (propertyPath: string) => {
 
                             setRouteMappingResult(
                                 propertyPath,
                                 {
-                                    requestBodyRequired : propertyValue?.requestBodyRequired ?? false,
-                                    synchronized        : propertyValue?.synchronized ?? false,
-                                    methods             : propertyMethods,
-                                    controller          : controller,
-                                    propertyName        : propertyKey,
-                                    propertyParams      : propertyParams
+                                    requestBodyRequired: propertyValue?.requestBodyRequired ?? false,
+                                    synchronized: propertyValue?.synchronized ?? false,
+                                    methods: propertyMethods,
+                                    controller: controller,
+                                    propertyName: propertyKey,
+                                    propertyParams: propertyParams
                                 }
                             );
 
@@ -655,33 +670,33 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private static _matchMethods (
-        rootMethods     : readonly RequestMethod[],
-        propertyMethods : readonly RequestMethod[]
-    ) : boolean {
+    private static _matchMethods(
+        rootMethods: readonly RequestMethod[],
+        propertyMethods: readonly RequestMethod[]
+    ): boolean {
 
         if (rootMethods.length === 0) return true;
 
         if (propertyMethods.length == 0) return true;
 
-        return some(rootMethods, (rootMethod : RequestMethod) : boolean => {
-            return some(propertyMethods, (propertyMethod : RequestMethod) : boolean => {
+        return some(rootMethods, (rootMethod: RequestMethod): boolean => {
+            return some(propertyMethods, (propertyMethod: RequestMethod): boolean => {
                 return rootMethod === propertyMethod;
             });
         });
 
     }
 
-    private static _parseCommonMethods (
-        rootMethods     : readonly RequestMethod[],
-        propertyMethods : readonly RequestMethod[]
-    ) : readonly RequestMethod[] {
+    private static _parseCommonMethods(
+        rootMethods: readonly RequestMethod[],
+        propertyMethods: readonly RequestMethod[]
+    ): readonly RequestMethod[] {
         return (
             rootMethods.length !== 0
                 ? filter(
                     propertyMethods,
-                    (propertyMethod: RequestMethod) : boolean => {
-                        return some(rootMethods, (rootMethod : RequestMethod) : boolean => {
+                    (propertyMethod: RequestMethod): boolean => {
+                        return some(rootMethods, (rootMethod: RequestMethod): boolean => {
                             return rootMethod === propertyMethod;
                         });
                     }
@@ -690,7 +705,7 @@ export class RequestRouterImpl implements RequestRouter {
         );
     }
 
-    private static _joinRoutePaths (a : string, b : string) : string {
+    private static _joinRoutePaths(a: string, b: string): string {
 
         a = trim(a);
         b = trim(trim(b), "/");
@@ -698,7 +713,7 @@ export class RequestRouterImpl implements RequestRouter {
         if (b.length === 0) return a;
         if (a.length === 0) return b;
 
-        if ( a[a.length - 1] === '/' || b[0] === '/' ) {
+        if (a[a.length - 1] === '/' || b[0] === '/') {
             return a + b;
         }
 
@@ -706,21 +721,21 @@ export class RequestRouterImpl implements RequestRouter {
 
     }
 
-    private static _bindRequestActionParams (
-        searchParams      : RequestQueryParameters,
-        requestBody       : JsonAny | undefined,
-        params            : readonly (RequestParamObject|null)[],
-        requestHeaders    : Headers,
-        pathVariables     : RouteParamValuesObject | undefined,
-        modelAttributes   : Map<string, any>
-    ) : any[] {
-        return map(params, (item : RequestParamObject|null) : any => {
+    private static _bindRequestActionParams(
+        searchParams: RequestQueryParameters,
+        requestBody: JsonAny | undefined,
+        params: readonly (RequestParamObject | null)[],
+        requestHeaders: Headers,
+        pathVariables: RouteParamValuesObject | undefined,
+        modelAttributes: Map<string, any>
+    ): any[] {
+        return map(params, (item: RequestParamObject | null): any => {
 
-            if ( item === null ) {
+            if (item === null) {
                 return undefined;
             }
 
-            const objectType : RequestParamObjectType | undefined = item?.objectType;
+            const objectType: RequestParamObjectType | undefined = item?.objectType;
 
             switch (objectType) {
 
@@ -728,20 +743,20 @@ export class RequestRouterImpl implements RequestRouter {
                     return requestBody;
 
                 case RequestParamObjectType.QUERY_PARAM: {
-                    const queryParamItem : RequestQueryParamObject = item as RequestQueryParamObject;
+                    const queryParamItem: RequestQueryParamObject = item as RequestQueryParamObject;
                     const key = queryParamItem.queryParam;
                     if (key === undefined) {
                         return RequestRouterImpl._castObjectParam(searchParams, queryParamItem.valueType);
                     }
                     if (!has(searchParams, key)) return undefined;
-                    const value : string | null = searchParams[key];
+                    const value: string | null = searchParams[key];
                     if (isNull(value)) return undefined;
                     return RequestRouterImpl._castStringParam(value, queryParamItem.valueType);
                 }
 
                 case RequestParamObjectType.REQUEST_HEADER: {
 
-                    const headerItem : RequestHeaderParamObject = item as RequestHeaderParamObject;
+                    const headerItem: RequestHeaderParamObject = item as RequestHeaderParamObject;
 
                     const headerName = headerItem.headerName;
 
@@ -755,9 +770,9 @@ export class RequestRouterImpl implements RequestRouter {
 
                     }
 
-                    const headerValue : string | undefined = requestHeaders.getFirst(headerName);
+                    const headerValue: string | undefined = requestHeaders.getFirst(headerName);
 
-                    if ( headerValue === undefined ) return undefined;
+                    if (headerValue === undefined) return undefined;
 
                     return RequestRouterImpl._castStringParam(headerValue, headerItem.valueType);
 
@@ -765,9 +780,9 @@ export class RequestRouterImpl implements RequestRouter {
 
                 case RequestParamObjectType.REQUEST_HEADER_MAP: {
 
-                    const headerItem : RequestHeaderMapParamObject = item as RequestHeaderMapParamObject;
+                    const headerItem: RequestHeaderMapParamObject = item as RequestHeaderMapParamObject;
 
-                    const defaultHeaders : DefaultHeaderMapValuesType | undefined = headerItem?.defaultValues;
+                    const defaultHeaders: DefaultHeaderMapValuesType | undefined = headerItem?.defaultValues;
 
                     if (requestHeaders.isEmpty()) {
 
@@ -780,10 +795,10 @@ export class RequestRouterImpl implements RequestRouter {
                     } else {
 
                         if (defaultHeaders) {
-                            return new Headers( {
+                            return new Headers({
                                 ...defaultHeaders,
                                 ...requestHeaders.valueOf()
-                            } );
+                            });
                         } else {
                             return requestHeaders.clone();
                         }
@@ -794,13 +809,13 @@ export class RequestRouterImpl implements RequestRouter {
 
                 case RequestParamObjectType.PATH_VARIABLE: {
 
-                    const pathParamItem : RequestPathVariableParamObject = item as RequestPathVariableParamObject;
+                    const pathParamItem: RequestPathVariableParamObject = item as RequestPathVariableParamObject;
 
                     const variableName = pathParamItem.variableName;
 
                     const variableValue = pathVariables && has(pathVariables, variableName) ? pathVariables[variableName] : undefined;
 
-                    if ( variableValue !== undefined && variableValue !== '' ) {
+                    if (variableValue !== undefined && variableValue !== '') {
 
                         if (pathParamItem.decodeValue) {
                             return decodeURIComponent(variableValue);
@@ -821,7 +836,7 @@ export class RequestRouterImpl implements RequestRouter {
 
                 case RequestParamObjectType.MODEL_ATTRIBUTE: {
 
-                    const modelAttributeItem : RequestModelAttributeParamObject = item as RequestModelAttributeParamObject;
+                    const modelAttributeItem: RequestModelAttributeParamObject = item as RequestModelAttributeParamObject;
 
                     const key = modelAttributeItem.attributeName;
 
@@ -837,10 +852,10 @@ export class RequestRouterImpl implements RequestRouter {
         });
     }
 
-    private static _castStringParam (
-        value : string,
-        type  : RequestParamValueType
-    ) : any {
+    private static _castStringParam(
+        value: string,
+        type: RequestParamValueType
+    ): any {
 
         switch (type) {
 
@@ -864,10 +879,10 @@ export class RequestRouterImpl implements RequestRouter {
         throw new TypeError(`Unsupported type: ${type}`)
     }
 
-    private static _castObjectParam (
-        value : {readonly [key:string]: string},
-        type  : RequestParamValueType
-    ) : any {
+    private static _castObjectParam(
+        value: { readonly [key: string]: string },
+        type: RequestParamValueType
+    ): any {
         switch (type) {
             case RequestParamValueType.REGULAR_OBJECT:
                 return JSON.parse(JSON.stringify(value));
@@ -882,14 +897,14 @@ export class RequestRouterImpl implements RequestRouter {
         throw new TypeError(`Unsupported type: ${type}`)
     }
 
-    private static _getOrCreateRequestModelAttributesForController (
-        requestModelAttributes : Map<RequestController, Map<string, any>>,
+    private static _getOrCreateRequestModelAttributesForController(
+        requestModelAttributes: Map<RequestController, Map<string, any>>,
         routeController: any
-    ) : Map<string, any> {
+    ): Map<string, any> {
 
-        let modelAttributeValues : Map<string, any> | undefined = requestModelAttributes.get(routeController);
+        let modelAttributeValues: Map<string, any> | undefined = requestModelAttributes.get(routeController);
 
-        if ( modelAttributeValues != undefined ) {
+        if (modelAttributeValues != undefined) {
             return modelAttributeValues;
         }
 

@@ -3,7 +3,13 @@
 import { OpenAiModel } from "../../types/OpenAiModel";
 import { explainRegularObject, isRegularObject } from "../../../types/RegularObject";
 import { explainNoOtherKeys, hasNoOtherKeys } from "../../../types/OtherKeys";
-import { explainString, explainStringOrUndefined, isString, isStringOrUndefined } from "../../../types/String";
+import {
+    explainString, explainStringOrNull,
+    explainStringOrUndefined,
+    isString,
+    isStringOrNull,
+    isStringOrUndefined
+} from "../../../types/String";
 import { explain, explainProperty } from "../../../types/explain";
 import { explainArrayOf, isArrayOf } from "../../../types/Array";
 import { startsWith } from "../../../functions/startsWith";
@@ -55,6 +61,8 @@ export interface OpenAiChatCompletionResponseDTO {
      */
     readonly usage : OpenAiCompletionResponseUsage;
 
+    readonly system_fingerprint: string | null
+
     readonly warning ?: string;
 
 }
@@ -76,7 +84,8 @@ export function createOpenAiChatCompletionResponseDTO (
     created: number,
     model: OpenAiModel | string,
     choices: readonly (OpenAiChatCompletionResponseChoice | OpenAiError)[],
-    usage: OpenAiCompletionResponseUsage
+    usage: OpenAiCompletionResponseUsage,
+    system_fingerprint: string | null
 ) : OpenAiChatCompletionResponseDTO {
     return {
         id,
@@ -84,7 +93,8 @@ export function createOpenAiChatCompletionResponseDTO (
         created,
         model,
         choices,
-        usage
+        usage,
+        system_fingerprint
     };
 }
 
@@ -104,6 +114,7 @@ export function isOpenAiChatCompletionResponseDTO (value: unknown) : value is Op
             'model',
             'choices',
             'usage',
+            'system_fingerprint',
             'warning'
         ])
         && isString(value?.id)
@@ -112,6 +123,7 @@ export function isOpenAiChatCompletionResponseDTO (value: unknown) : value is Op
         && isString(value?.model)
         && isArrayOf<OpenAiChatCompletionResponseChoice|OpenAiError>(value?.choices, isOpenAiChatCompletionResponseChoice)
         && isOpenAiCompletionResponseUsage(value?.usage)
+        && isStringOrNull(value?.system_fingerprint)
         && isStringOrUndefined(value?.warning)
     );
 }
@@ -133,6 +145,7 @@ export function explainOpenAiChatCompletionResponseDTO (value: any) : string {
                 'model',
                 'choices',
                 'usage',
+                'system_fingerprint',
                 'warning'
             ])
             , explainProperty("id", explainString(value?.id))
@@ -146,6 +159,7 @@ export function explainOpenAiChatCompletionResponseDTO (value: any) : string {
             isOpenAiChatCompletionResponseChoice
         ))
             , explainProperty("usage", explainOpenAiCompletionResponseUsage(value?.usage))
+            ,explainProperty("system_fingerprint", explainStringOrNull(value?.system_fingerprint))
             , explainProperty("warning", explainStringOrUndefined(value?.warning))
         ]
     );

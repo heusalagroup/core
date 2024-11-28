@@ -33,7 +33,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                     200,
                     200,
                     500
-                )
+                ),
+                null
             );
 
             expect(result).toBeTruthy();
@@ -57,7 +58,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                         "completion_tokens": 200,
                         "prompt_tokens": 200,
                         "total_tokens": 500
-                    }
+                    },
+                    "system_fingerprint": null
                 }
             )
         });
@@ -86,7 +88,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                     "completion_tokens": 200,
                     "prompt_tokens": 200,
                     "total_tokens": 500
-                }
+                },
+                "system_fingerprint": null
             };
 
             expect(isOpenAiChatCompletionResponseDTO(item)).toBeTruthy();
@@ -113,7 +116,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                         "completion_tokens": 200,
                         "prompt_tokens": 200,
                         "total_tokens": 500
-                    }
+                    },
+                    "system_fingerprint": null
                 };
 
                 expect(isOpenAiChatCompletionResponseDTO(item)).toBe(false);
@@ -145,7 +149,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                     "completion_tokens": 200,
                     "prompt_tokens": 200,
                     "total_tokens": 500
-                }
+                },
+                "system_fingerprint": null
             };
 
         expect(explainOpenAiChatCompletionResponseDTO(item)).toBe(
@@ -177,7 +182,8 @@ describe("OpenAiChatCompletionResponseDTO", () => {
                     "completion_tokens": 200,
                     "prompt_tokens": 200,
                     "total_tokens": 500
-                }
+                },
+                "system_fingerprint": null
             };
 
             expect(explainOpenAiChatCompletionResponseDTO(item)).toBe(
